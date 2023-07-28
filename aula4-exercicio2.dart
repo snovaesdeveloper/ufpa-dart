@@ -24,6 +24,17 @@ class Carro extends Veiculo {
   Carro(String marca, String modelo, int anoFabricacao, this.quilometragemPorAno, this.numeroDePortas)
       : super(marca, modelo, anoFabricacao);
 
+  // Método para calcular o texto do adesivo do carro
+  String calcularAdesivoCarro() {
+    if (quilometragemPorAno < 15000) {
+      return 'Seminovo';
+    } else if (quilometragemPorAno >= 15000 && quilometragemPorAno <= 20000) {
+      return 'Usado';
+    } else {
+      return 'Antigo';
+    }
+  }
+
   // Método para exibir informações do carro
   @override
   void exibirInformacoes() {
@@ -42,6 +53,17 @@ class Moto extends Veiculo {
   Moto(String marca, String modelo, int anoFabricacao, this.numeroDeCilindradas, this.partidaEletrica)
       : super(marca, modelo, anoFabricacao);
 
+  // Método para calcular o texto do adesivo da moto
+  String calcularAdesivoMoto() {
+    if (numeroDeCilindradas < 125) {
+      return 'Leve';
+    } else if (numeroDeCilindradas >= 125 && numeroDeCilindradas <= 500) {
+      return 'Normal';
+    } else {
+      return 'Esportiva';
+    }
+  }
+
   // Método para exibir informações da moto
   @override
   void exibirInformacoes() {
@@ -53,13 +75,18 @@ class Moto extends Veiculo {
 
 void main() {
   // Criando um carro com dados fictícios
-  Carro meuCarro = Carro('MontadoraX', 'ModeloCarro', 2022, 15000, 4);
+  Carro meuCarro = Carro('MontadoraX', 'ModeloCarro', 2022, 12000, 4);
 
   // Criando uma moto com dados fictícios
-  Moto minhaMoto = Moto('MontadoraY', 'ModeloMoto', 2021, 500, true);
+  Moto minhaMoto = Moto('MontadoraY', 'ModeloMoto', 2021, 300, true);
 
   // Exibindo as informações do carro e da moto
+  print('Carro:');
   meuCarro.exibirInformacoes();
+  print('Adesivo: ${meuCarro.calcularAdesivoCarro()}');
   print(''); // Adicionando uma linha em branco para separar as informações
+
+  print('Moto:');
   minhaMoto.exibirInformacoes();
+  print('Adesivo: ${minhaMoto.calcularAdesivoMoto()}');
 }
