@@ -1,209 +1,196 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(
-    const MaterialApp(
-      home: Tela(),
-    ),
-  );
+  runApp(MyApp());
 }
 
-class Tela extends StatefulWidget {
-  const Tela({super.key});
-
-  @override
-  State<Tela> createState() => _TelaState();
-}
-
-class _TelaState extends State<Tela> {
-  String busca = '';
-
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    List<String> categorias = [
-      'Sobremesas',
-      'Pratos principais',
-      'Aperitivos',
-    ];
-    List<String> nomesPratos = [
-      'Prato A',
-      'Prato B',
-      'Prato C',
-    ];
-    nomesPratos =
-        nomesPratos.where((nomePrato) => nomePrato.contains(busca)).toList();
-
-    return Scaffold(
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(10),
-            child: TextFormField(
-              initialValue: busca,
-              onChanged: (valor) {
-                setState(() {
-                  busca = valor;
-                });
-              },
-              decoration: const InputDecoration(
-                prefixIcon: Icon(Icons.search),
-                hintText: 'Buscar prato',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ),
-          for (String categoria in categorias)
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Secao(
-                titulo: categoria,
-                nomesPratos: nomesPratos,
-              ),
-            ),
-        ],
+    return MaterialApp(
+      title: 'Jogo da Velha',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
       ),
+      home: JogoDaVelha(),
     );
   }
 }
 
-class Secao extends StatelessWidget {
-  final String titulo;
-  final List<String> nomesPratos;
-
-  const Secao({
-    super.key,
-    required this.titulo,
-    required this.nomesPratos,
-  });
-
+class JogoDaVelha extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      
-       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Center(
-          
-          child: Text(
-            titulo,
-            style: const TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-             crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              for (String nomePrato in nomesPratos)
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                  ),
-        
-                  child:  Expanded(
-                    child:  SizedBox(                
-                    width: 400,
-                    height: 200,
-                    child: Card(
-              
-                      margin: EdgeInsets.all(10),
-                      color: Colors.blue,
-                   
-                      child: CardPrato(
-                        nome:  nomePrato, 
-                        
-                        icone: const Icon(Icons.restaurant, size: 40, color: Colors.white, ),
-                      ),
-                    ),
-                  ),)
-                  
-                  
-                 
-                ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+  _GameScreenState createState() => _GameScreenState();
 }
 
-class CardPrato extends StatelessWidget {
-  final String nome;
-  final Icon icone;
+class _GameScreenState extends State<GameScreen> {
+  String player1Name = '';
+  String player2Name = '';
+  List<List<String>> board = List.generate(3, (_) => List.filled(3, ''));
 
-  const CardPrato({
-    super.key,
-    required this.nome,
-    required this.icone,
-  });
+  bool player1Turn = true;
+  String currentPlayer = '';
 
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () async {
-        bool? resultado = await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => TelaDescricao(
-              nomePrato: nome,
-            ),
-          ),
-        );
-        if (resultado == null) {
-          print('Usuário apenas visualizou.');
+  void startGame() {
+    setState(() {
+      player1Turn = true;
+      currentPlayer = player1Name;
+      board = List.generate(3, (_) => List.filled(3, ''));
+    });
+  }
+
+  void makeMove(int row, int col) {
+    if (board[row][col] == '' && currentPlayer != '') {
+      setState(() {
+        board[row][col] = player1Turn ? 'O' : 'X';
+        if (checkWin(row, col)) {
+          _showWinDialog(currentPlayer);
+        } else if (checkDraw()) {
+          _showDrawDialog();
         } else {
-          print('Usuário selecionou: $resultado');
+          player1Turn = !player1Turn;
+          currentPlayer = player1Turn ? player1Name : player2Name;
         }
-      },
+      });
+    }
+  }
 
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          icone,
-          Text(nome, style: TextStyle(fontSize: 20),),
-        ],
-      ),
+  bool checkWin(int row, int col) {
+    String symbol = board[row][col];
+    // Check as linhas
+    if (board[row].every((s) => s == symbol)) return true;
+    // Check as colunas
+    if (board.every((r) => r[col] == symbol)) return true;
+    // Check o dialogo
+    if (row == col && board.every((r) => r[row] == symbol)) return true;
+    if (row + col == 2 && board.every((r) => r[2 - row] == symbol)) return true;
+    return false;
+  }
+
+  bool checkDraw() {
+    return board.every((row) => row.every((cell) => cell != ''));
+  }
+
+  void _showWinDialog(String winner) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('$winner venceu!'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                startGame();
+              },
+              child: Text('Jogar Novamente'),
+            ),
+          ],
+        );
+      },
     );
   }
-}
 
-class TelaDescricao extends StatelessWidget {
-  final String nomePrato;
-
-  const TelaDescricao({super.key, required this.nomePrato});
+  void _showDrawDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Empate!'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                startGame();
+              },
+              child: Text('Jogar Novamente'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(nomePrato)),
-      body: Column(
-        children: [
-          const Text('Olá, mundo!'),
-          TextButton(
-            child: const Text('fazer pedido'),
-            onPressed: () {
-              Navigator.pop(context, true);
-            },
-          ),
-          TextButton(
-            child: const Text('cancelar pedido'),
-            onPressed: () {
-              Navigator.pop(context, false);
-            },
-          ),
-          TextButton(
-            child: const Text('voltar'),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
-        ],
+      appBar: AppBar(
+        title: Text('Jogo da Velha'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            if (currentPlayer.isEmpty)
+              Column(
+                children: [
+                  TextField(
+                    onChanged: (value) {
+                      setState(() {
+                        player1Name = value;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      labelText: 'Nome do Jogador 1 (O)',
+                    ),
+                  ),
+                  TextField(
+                    onChanged: (value) {
+                      setState(() {
+                        player2Name = value;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      labelText: 'Nome do Jogador 2 (X)',
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                      startGame();
+                    },
+                    child: Text('Começar'),
+                  ),
+                ],
+              ),
+            if (currentPlayer.isNotEmpty)
+              Column(
+                children: [
+                  Text('Jogador 1: $player1Name', style: TextStyle(color: Colors.black)),
+                  Text('Jogador 2: $player2Name', style: TextStyle(color: Colors.black)),
+                  SizedBox(height: 20),
+                  Text('Vez de: $currentPlayer', style: TextStyle(color: Colors.black)),
+                  SizedBox(height: 20),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 3,
+                    ),
+                    itemCount: 9,
+                    itemBuilder: (BuildContext context, int index) {
+                      int row = index ~/ 3;
+                      int col = index % 3;
+                      return GestureDetector(
+                        onTap: () {
+                          makeMove(row, col);
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black),
+                          ),
+                          child: Center(
+                            child: Text(
+                              board[row][col],
+                              style: TextStyle(fontSize: 32, color: Colors.blue),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+          ],
+        ),
       ),
     );
   }
